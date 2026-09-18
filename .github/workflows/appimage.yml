@@ -1,23 +1,8 @@
 name: AppImage (Linux)
 
+# Disabled on this Windows fork: run manually only.
 on:
   workflow_dispatch:
-  push:
-    branches:
-      - main
-    paths:
-      - "dist/arch/**"
-      - ".github/workflows/appimage.yml"
-  # PRs build only when packaging inputs change; code-only PRs are already compile-covered by GPUI CI's Linux job.
-  pull_request:
-    paths:
-      - "docs/icon.svg"
-      - "dist/appimage/**"
-      - "dist/arch/**"
-      - "shell/gpui/linux/**"
-      - ".github/workflows/appimage.yml"
-  release:
-    types: [published]
 
 permissions:
   contents: read
