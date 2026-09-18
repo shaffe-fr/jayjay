@@ -1,12 +1,7 @@
 name: Pages
 
+# Disabled on this Windows fork: run manually only.
 on:
-  push:
-    branches:
-      - main
-    paths:
-      - "docs/**"
-      - ".github/workflows/pages.yml"
   workflow_dispatch:
 
 permissions:

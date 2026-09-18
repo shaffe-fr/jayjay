@@ -1,21 +1,8 @@
 name: GPUI CI
 
+# Disabled on this Windows fork: run manually only.
 on:
-  push:
-    branches: [main]
-    paths:
-      - "shell/gpui/**"
-      - "crates/**"
-      - "Cargo.toml"
-      - "Cargo.lock"
-      - ".github/workflows/gpui-ci.yml"
-  pull_request:
-    paths:
-      - "shell/gpui/**"
-      - "crates/**"
-      - "Cargo.toml"
-      - "Cargo.lock"
-      - ".github/workflows/gpui-ci.yml"
+  workflow_dispatch:
 
 permissions:
   contents: read
