@@ -113,7 +113,7 @@ impl Render for RepoWindow {
             .as_ref()
             .map(|state| render_bookmark_picker(state, &bookmarks, &t, &cx.entity()));
 
-        let mut root = self.render_root(&t, cx);
+        let mut root = self.render_root(&t, window, cx);
 
         if let Some(onboarding) = self.onboarding.as_ref() {
             root = root.child(onboarding.clone());

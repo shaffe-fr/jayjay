@@ -13,7 +13,12 @@ pub const TOOLBAR_LEADING_INSET: f32 = 78.;
 pub const CUSTOM_TERMINAL_LABEL: &str = "App name";
 pub const CUSTOM_TERMINAL_HINT: &str = "e.g. Terminal";
 
-pub fn append_menu_bar(root: gpui::Div, _t: &Theme, _cx: &mut Context<RepoWindow>) -> gpui::Div {
+pub fn append_menu_bar(
+    root: gpui::Div,
+    _t: &Theme,
+    _window: &mut gpui::Window,
+    _cx: &mut Context<RepoWindow>,
+) -> gpui::Div {
     root
 }
 

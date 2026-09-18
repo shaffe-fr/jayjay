@@ -55,7 +55,7 @@ impl Render for RepoListWindow {
                 .child(panel_toggle(panel_shown, &t))
         };
 
-        div()
+        let root = div()
             .id("repo-list-window")
             .debug_selector(|| "repo-list-window".to_owned())
             .track_focus(&self.focus_handle)
@@ -67,9 +67,39 @@ impl Render for RepoListWindow {
             .flex()
             .flex_col()
             .bg(rgb(t.detail_bg))
-            .text_color(rgb(t.fg))
-            .child(content)
+            .text_color(rgb(t.fg));
+
+        // Painted before the content so the panel toggle and rows stay clickable
+        // above the drag region.
+        #[cfg(not(target_os = "macos"))]
+        let root = root.child(title_bar(window.is_maximized(), &t));
+
+        root.child(content)
     }
+}
+
+/// Fills the empty top strip: an OS drag region spanning the width, with the
+/// window controls pinned to the trailing edge.
+#[cfg(not(target_os = "macos"))]
+fn title_bar(is_maximized: bool, t: &Theme) -> Div {
+    use gpui::{InteractiveElement, WindowControlArea};
+
+    div()
+        .absolute()
+        .top_0()
+        .left_0()
+        .right_0()
+        .h(px(TOP_INSET))
+        .flex()
+        .flex_row()
+        .items_center()
+        .child(
+            div()
+                .flex_1()
+                .h_full()
+                .window_control_area(WindowControlArea::Drag),
+        )
+        .child(crate::ui::window_controls::window_controls(is_maximized, t))
 }
 
 impl RepoListWindow {
