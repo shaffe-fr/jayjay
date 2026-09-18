@@ -18,7 +18,12 @@ use crate::windows::repo_list::RepoListWindow;
 use crate::windows::settings::{SettingsSection, SettingsView};
 
 impl RepoWindow {
-    pub(super) fn render_root(&self, t: &Theme, cx: &mut Context<Self>) -> Div {
+    pub(super) fn render_root(
+        &self,
+        t: &Theme,
+        window: &mut gpui::Window,
+        cx: &mut Context<Self>,
+    ) -> Div {
         let mut root = div()
             .track_focus(&self.focus_handle)
             .key_context("RepoWindow")
@@ -171,6 +176,6 @@ impl RepoWindow {
             });
         }
 
-        append_menu_bar(root, t, cx)
+        append_menu_bar(root, t, window, cx)
     }
 }

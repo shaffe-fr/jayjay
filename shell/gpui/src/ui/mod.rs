@@ -19,3 +19,5 @@ pub(crate) mod resize_handle;
 pub mod scrollbar;
 pub(crate) mod selection;
 pub mod text_area;
+#[cfg(not(target_os = "macos"))]
+pub(crate) mod window_controls;
