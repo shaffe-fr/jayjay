@@ -24,6 +24,7 @@ pub fn append_menu_bar(
     root.child(crate::ui::app_menu::menu_bar(t, window, cx))
 }
 
+#[cfg(not(target_os = "windows"))]
 pub fn reveal_path(path: &Path) -> bool {
     let target = if path.is_file() {
         path.parent().unwrap_or(path)
@@ -36,6 +37,20 @@ pub fn reveal_path(path: &Path) -> bool {
         || detach_stdio(Command::new("open").arg(target))
             .spawn()
             .is_ok()
+}
+
+/// `explorer /select,<file>` opens the folder with the file highlighted;
+/// `explorer <dir>` opens the folder itself. explorer returns a non-zero exit
+/// code even on success, so a successful spawn is the signal, not the status.
+#[cfg(target_os = "windows")]
+pub fn reveal_path(path: &Path) -> bool {
+    let mut command = Command::new("explorer");
+    if path.is_file() {
+        command.arg(format!("/select,{}", path.display()));
+    } else {
+        command.arg(path);
+    }
+    detach_stdio(&mut command).spawn().is_ok()
 }
 
 #[cfg(target_os = "linux")]

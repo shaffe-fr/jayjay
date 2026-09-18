@@ -63,7 +63,20 @@ fn apply_command_environment(command: &mut Command) {
     if let Some(sock) = ssh_auth_sock() {
         command.env("SSH_AUTH_SOCK", sock);
     }
+    hide_console_window(command);
 }
+
+/// Console programs (`jj`, `git`, `gh`) spawned from the GUI app would each flash
+/// a console window; `CREATE_NO_WINDOW` suppresses it. No-op off Windows.
+#[cfg(windows)]
+pub(crate) fn hide_console_window(command: &mut Command) {
+    use std::os::windows::process::CommandExt;
+    const CREATE_NO_WINDOW: u32 = 0x0800_0000;
+    command.creation_flags(CREATE_NO_WINDOW);
+}
+
+#[cfg(not(windows))]
+pub(crate) fn hide_console_window(_command: &mut Command) {}
 
 fn command_path() -> Option<String> {
     let login_shell_path = cached_login_shell_path().as_ref().cloned();
@@ -120,7 +133,44 @@ fn binary_candidates_from_paths(
 ) -> Vec<PathBuf> {
     path_entries_from_values(path_values, home)
         .into_iter()
-        .map(|entry| entry.join(name))
+        .flat_map(|entry| executable_names(name).map(move |file| entry.join(&file)))
+        .collect()
+}
+
+/// On Windows only files ending in a `PATHEXT` extension are runnable via
+/// `std::process::Command` (`kiro.cmd`, `code.exe`). A tool directory may also
+/// hold an extensionless companion (e.g. `kiro`, a Unix shell script) that is
+/// found first by a bare-name lookup but fails to spawn with "not a valid Win32
+/// application". So try the `PATHEXT` variants first, and fall back to the bare
+/// name last (covering names that already carry an extension).
+#[cfg(windows)]
+fn executable_names(name: &str) -> impl Iterator<Item = String> {
+    let extensions = if Path::new(name).extension().is_some() {
+        Vec::new()
+    } else {
+        windows_path_extensions()
+    };
+    extensions
+        .into_iter()
+        .map(move |ext| format!("{name}{ext}"))
+        .chain(std::iter::once(name.to_owned()))
+}
+
+#[cfg(not(windows))]
+fn executable_names(name: &str) -> impl Iterator<Item = String> {
+    std::iter::once(name.to_owned())
+}
+
+#[cfg(windows)]
+fn windows_path_extensions() -> Vec<String> {
+    let raw = std::env::var("PATHEXT")
+        .ok()
+        .filter(|value| !value.trim().is_empty())
+        .unwrap_or_else(|| ".COM;.EXE;.BAT;.CMD".to_owned());
+    raw.split(';')
+        .map(str::trim)
+        .filter(|ext| ext.starts_with('.'))
+        .map(str::to_owned)
         .collect()
 }
 
@@ -327,7 +377,10 @@ fn check_cli(binary: &str) -> CliStatus {
 
 fn command_version_text(binary: &str) -> Option<String> {
     for arg in ["version", "--version"] {
-        let Ok(output) = std::process::Command::new(binary).arg(arg).output() else {
+        let mut command = std::process::Command::new(binary);
+        command.arg(arg);
+        hide_console_window(&mut command);
+        let Ok(output) = command.output() else {
             continue;
         };
         if !output.status.success() {
@@ -433,6 +486,48 @@ mod tests {
 
         assert!(candidates.contains(&PathBuf::from("/usr/bin/jj")));
         assert!(!candidates.iter().any(|p| !p.is_absolute()));
+    }
+
+    #[cfg(windows)]
+    #[test]
+    fn windows_candidates_include_pathext_variants() {
+        let candidates =
+            binary_candidates_from_paths("code", [Some(r"C:\tools".to_owned()), None], None);
+        let names: Vec<String> = candidates
+            .iter()
+            .filter_map(|path| path.file_name()?.to_str().map(str::to_ascii_lowercase))
+            .collect();
+
+        assert!(names.contains(&"code".to_owned()));
+        assert!(names.contains(&"code.exe".to_owned()));
+        assert!(names.contains(&"code.cmd".to_owned()));
+    }
+
+    // A tool dir holding both `kiro` (Unix script) and `kiro.cmd` must resolve to
+    // the runnable .cmd, so PATHEXT variants have to come before the bare name.
+    #[cfg(windows)]
+    #[test]
+    fn windows_candidates_try_extensions_before_bare_name() {
+        let candidates =
+            binary_candidates_from_paths("kiro", [Some(r"C:\tools".to_owned()), None], None);
+        let names: Vec<String> = candidates
+            .iter()
+            .filter_map(|path| path.file_name()?.to_str().map(str::to_ascii_lowercase))
+            .collect();
+
+        let bare = names.iter().position(|n| n == "kiro").unwrap();
+        let cmd = names.iter().position(|n| n == "kiro.cmd").unwrap();
+        assert!(cmd < bare, "kiro.cmd must be tried before bare kiro");
+    }
+
+    #[cfg(windows)]
+    #[test]
+    fn windows_candidates_keep_explicit_extension_verbatim() {
+        let candidates =
+            binary_candidates_from_paths("code.cmd", [Some(r"C:\tools".to_owned()), None], None);
+
+        assert!(candidates.contains(&PathBuf::from(r"C:\tools\code.cmd")));
+        assert!(!candidates.contains(&PathBuf::from(r"C:\tools\code.cmd.exe")));
     }
 
     #[cfg(unix)]
