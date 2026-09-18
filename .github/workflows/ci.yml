@@ -1,25 +1,8 @@
 name: CI
 
+# Disabled on this Windows fork: macOS/Swift CI runs manually only.
 on:
-  push:
-    branches: [main]
-    paths:
-      - "shell/mac/**"
-      - "crates/**"
-      - "Cargo.toml"
-      - "Cargo.lock"
-      - ".github/workflows/ci.yml"
-      - "justfile"
-      - "shell/justfile"
-  pull_request:
-    paths:
-      - "shell/mac/**"
-      - "crates/**"
-      - "Cargo.toml"
-      - "Cargo.lock"
-      - ".github/workflows/ci.yml"
-      - "justfile"
-      - "shell/justfile"
+  workflow_dispatch:
 
 permissions:
   contents: read
