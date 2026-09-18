@@ -342,3 +342,4 @@ fn refresh_icon(is_refreshing: bool, t: &Theme) -> AnyElement {
         icon.into_any_element()
     }
 }
+

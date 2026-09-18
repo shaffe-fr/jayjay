@@ -120,7 +120,7 @@ impl Render for RepoWindow {
                 )
             });
 
-        let mut root = self.render_root(&t, cx);
+        let mut root = self.render_root(&t, window, cx);
 
         if let Some(onboarding) = self.onboarding.as_ref() {
             root = root.child(onboarding.clone());

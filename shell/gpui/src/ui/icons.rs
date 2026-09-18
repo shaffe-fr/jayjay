@@ -94,6 +94,7 @@ pub mod glyph {
     pub const ROWS: &str = "\u{e58a}";
     pub const SLIDERS_HORIZONTAL: &str = "\u{e29a}";
     pub const SPARKLE: &str = "\u{e47e}";
+    pub const SQUARE: &str = "\u{e167}";
     pub const TAG: &str = "\u{e17f}";
     pub const TERMINAL: &str = "\u{e181}";
     pub const SQUARE_TERMINAL: &str = "\u{e20a}";

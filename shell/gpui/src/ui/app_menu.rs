@@ -59,7 +59,11 @@ pub(crate) fn render_app_menu(
 }
 
 #[cfg(not(target_os = "macos"))]
-pub(crate) fn menu_bar(t: &Theme, cx: &mut gpui::Context<RepoWindow>) -> AnyElement {
+pub(crate) fn menu_bar(
+    t: &Theme,
+    window: &mut gpui::Window,
+    cx: &mut gpui::Context<RepoWindow>,
+) -> AnyElement {
     let menus = cx.get_menus().unwrap_or_default();
     let mut row = div()
         .id("app-menu-bar")
@@ -70,7 +74,7 @@ pub(crate) fn menu_bar(t: &Theme, cx: &mut gpui::Context<RepoWindow>) -> AnyElem
         .gap(px(2.))
         .w_full()
         .h(px(t.scaled_control_height(28., 12.)))
-        .px(px(8.))
+        .pl(px(8.))
         .bg(rgb(t.header_bg))
         .border_b_1()
         .border_color(rgb(t.border));
@@ -80,7 +84,23 @@ pub(crate) fn menu_bar(t: &Theme, cx: &mut gpui::Context<RepoWindow>) -> AnyElem
         row = row.child(menu_bar_item(name, t, cx));
     }
 
-    row.into_any_element()
+    row.child(menu_bar_drag_region())
+        .child(crate::ui::window_controls::window_controls(
+            window.is_maximized(),
+            t,
+        ))
+        .into_any_element()
+}
+
+/// The empty stretch between the menus and the window controls. Tagging it as
+/// the platform drag area lets the OS move the window when it is dragged.
+#[cfg(not(target_os = "macos"))]
+fn menu_bar_drag_region() -> AnyElement {
+    div()
+        .flex_1()
+        .h_full()
+        .window_control_area(gpui::WindowControlArea::Drag)
+        .into_any_element()
 }
 
 #[cfg(not(target_os = "macos"))]
