@@ -8,6 +8,7 @@ pub(super) fn terminate_process_group(pid: u32, force: bool) {
     if force {
         command.arg("/F");
     }
+    crate::repo::environment::hide_console_window(&mut command);
     let _ = command
         .stdin(Stdio::null())
         .stdout(Stdio::null())

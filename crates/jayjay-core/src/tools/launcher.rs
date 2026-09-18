@@ -38,6 +38,15 @@ pub(super) struct EditorLaunch {
 }
 
 impl EditorLaunch {
+    /// `argv[0]` must be a program name resolvable at spawn time (via
+    /// `subprocess_command`), with the target path already appended.
+    pub(super) fn from_argv(argv: Vec<String>) -> Self {
+        Self {
+            argv,
+            in_terminal: false,
+        }
+    }
+
     fn from_command(
         cmd: &str,
         launch_args: &[&str],

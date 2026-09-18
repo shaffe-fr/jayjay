@@ -40,7 +40,9 @@ pub fn spawn_terminal(term: Terminal, cwd: &str, command: Option<&str>, custom: 
         | Terminal::Konsole
         | Terminal::LxTerminal
         | Terminal::Alacritty
-        | Terminal::Kitty => run_applescript(&format!(
+        | Terminal::Kitty
+        | Terminal::PowerShell
+        | Terminal::Cmd => run_applescript(&format!(
             "tell application \"Terminal\" to do script \"{}\"",
             escape_double_quotes(&shell_line(cwd, command)),
         )),
