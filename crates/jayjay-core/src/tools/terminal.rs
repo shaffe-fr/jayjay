@@ -9,6 +9,8 @@ pub(super) enum Terminal {
     LxTerminal,
     Alacritty,
     Kitty,
+    PowerShell,
+    Cmd,
     Custom,
 }
 
@@ -23,6 +25,8 @@ impl Terminal {
             "lxterminal" => Self::LxTerminal,
             "alacritty" => Self::Alacritty,
             "kitty" => Self::Kitty,
+            "powershell" => Self::PowerShell,
+            "cmd" => Self::Cmd,
             "custom" => Self::Custom,
             _ => return None,
         })
@@ -30,6 +34,7 @@ impl Terminal {
 }
 
 /// `cd '<cwd>' && <command>`, or just `cd '<cwd>'` if no command.
+#[cfg(not(target_os = "windows"))]
 pub(super) fn shell_line(cwd: &str, command: Option<&str>) -> String {
     let cd = format!("cd '{}'", escape_single_quotes(cwd));
     match command {
@@ -39,11 +44,12 @@ pub(super) fn shell_line(cwd: &str, command: Option<&str>) -> String {
 }
 
 /// Make `s` safe inside a single-quoted shell word via the `'\''` idiom.
+#[cfg(not(target_os = "windows"))]
 pub(super) fn escape_single_quotes(s: &str) -> String {
     s.replace('\'', "'\\''")
 }
 
-#[cfg(test)]
+#[cfg(all(test, not(target_os = "windows")))]
 mod tests {
     use super::*;
 
